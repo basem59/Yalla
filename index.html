@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Meta Tags & Keywords -->
-    <title>آخر الأخبار والمقالات - يلا نيوز</title>
-    <meta name="description" content="تابع أحدث الأخبار السياسية، الاقتصادية، والرياضية ومقالات الرأي المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
-    <meta name="keywords" content="يلا نيوز, أخبار عاجلة, صحافة رقمية, أخبار اليوم, Yalla News">
+    <title>أحدث الأخبار ومقالات أطباق المطابخ العربية - يلا نيوز</title>
+    <meta name="description" content="تابع أحدث المقالات والأخبار وأشهى أطباق المطابخ العربية المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
+    <meta name="keywords" content="يلا نيوز, أطباق عربية, مطبخ عربي, وصفات, أخبار اليوم, Yalla News">
     <link rel="canonical" href="https://yallanews-feed.onrender.com/">
 
     <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:title" content="آخر الأخبار والمقالات - يلا نيوز">
-    <meta property="og:description" content="تابع أحدث الأخبار السياسية، الاقتصادية، والرياضية ومقالات الرأي المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
+    <meta property="og:title" content="أحدث الأخبار ومقالات أطباق المطابخ العربية - يلا نيوز">
+    <meta property="og:description" content="تابع أحدث المقالات والأخبار وأشهى أطباق المطابخ العربية المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://yallanews-feed.onrender.com/">
 
@@ -302,7 +302,7 @@
 <body>
 
     <header>
-        <h1><span class="badge">جديد</span>آخر الأخبار</h1>
+        <h1><span class="badge">جديد</span>أحدث الأخبار ومقالات المطابخ العربية</h1>
         <a href="https://yallanews.net" target="_blank" rel="noopener noreferrer" class="site-link-btn">
             زيارة موقع يلا نيوز
         </a>
@@ -311,7 +311,7 @@
     <main id="app">
         <div class="loading-state">
             <div class="spinner"></div>
-            <p>جارٍ تحميل آخر الأخبار...</p>
+            <p>جارٍ تحميل أحدث المحتويات...</p>
         </div>
     </main>
 
@@ -323,32 +323,46 @@
         (function () {
             'use strict';
 
-            const RSS_URL = 'https://yallanews.net/rss/latest-posts';
+            // الخلاصتان: الخلاصة العامة + خلاصة أطباق المطابخ العربية
+            const RSS_URL_1 = 'https://yallanews.net/rss/latest-posts';
+            const RSS_URL_2 = 'https://yallanews.net/rss/category/arabic-cuisine';
+            
             const SITE_URL = 'https://yallanews.net';
-            const API_URL = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL);
+            const API_URL_1 = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL_1);
+            const API_URL_2 = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL_2);
 
             const app = document.getElementById('app');
 
-            async function loadFeed() {
+            async function loadFeeds() {
                 try {
-                    const response = await fetch(API_URL);
+                    // جلب الخلاصتين معاً بشكل متزامن
+                    const [res1, res2] = await Promise.all([
+                        fetch(API_URL_1).catch(() => null),
+                        fetch(API_URL_2).catch(() => null)
+                    ]);
 
-                    if (!response.ok) {
-                        throw new Error(`فشل الاتصال بالخدمة (رمز الحالة: ${response.status})`);
+                    let allItems = [];
+
+                    if (res1 && res1.ok) {
+                        const data1 = await res1.json();
+                        if (data1.status === 'ok' && data1.items) {
+                            allItems = allItems.concat(data1.items);
+                        }
                     }
 
-                    const data = await response.json();
-
-                    if (data.status !== 'ok') {
-                        throw new Error(data.message || 'فشل جلب البيانات من الخلاصة.');
+                    if (res2 && res2.ok) {
+                        const data2 = await res2.json();
+                        if (data2.status === 'ok' && data2.items) {
+                            allItems = allItems.concat(data2.items);
+                        }
                     }
 
-                    if (!data.items || data.items.length === 0) {
+                    if (allItems.length === 0) {
                         renderEmpty();
                         return;
                     }
 
-                    const posts = data.items.map(function (item, index) {
+                    const posts = allItems.map(function (item, index) {
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = item.description || '';
                         let summary = tempDiv.textContent || tempDiv.innerText || '';
@@ -367,17 +381,23 @@
                         return {
                             title: item.title || `مقال بدون عنوان #${index + 1}`,
                             link: item.link || SITE_URL,
-                            summary: summary,
-                            index: index
+                            summary: summary
                         };
                     });
 
-                    renderPosts(posts);
+                    // اختيار 5 بطاقات عشوائية من مجموع الخلاصتين مع كل زيارة
+                    const randomPosts = getRandomPosts(posts, 5);
+                    renderPosts(randomPosts);
 
                 } catch (error) {
-                    console.error('خطأ في تحميل الخلاصة:', error);
+                    console.error('خطأ في تحميل الخلاصات:', error);
                     renderError(error.message);
                 }
+            }
+
+            function getRandomPosts(array, count) {
+                const shuffled = [...array].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
             }
 
             function renderPosts(posts) {
@@ -440,7 +460,7 @@
 
             document.getElementById('year').textContent = new Date().getFullYear();
 
-            loadFeed();
+            loadFeeds();
         })();
     </script>
 </body>
