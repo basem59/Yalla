@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Meta Tags & Keywords -->
-    <title>أحدث الأخبار ومقالات أطباق المطابخ العربية - يلا نيوز</title>
+    <title>أحدث الأخبار ومقالات المطابخ العربية - يلا نيوز</title>
     <meta name="description" content="تابع أحدث المقالات والأخبار وأشهى أطباق المطابخ العربية المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
     <meta name="keywords" content="يلا نيوز, أطباق عربية, مطبخ عربي, وصفات, أخبار اليوم, Yalla News">
     <link rel="canonical" href="https://yallanews-feed.onrender.com/">
 
     <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:title" content="أحدث الأخبار ومقالات أطباق المطابخ العربية - يلا نيوز">
+    <meta property="og:title" content="أحدث الأخبار ومقالات المطابخ العربية - يلا نيوز">
     <meta property="og:description" content="تابع أحدث المقالات والأخبار وأشهى أطباق المطابخ العربية المتجددة على مدار الساعة عبر موقع يلا نيوز الإخباري.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://yallanews-feed.onrender.com/">
@@ -323,7 +323,7 @@
         (function () {
             'use strict';
 
-            // الخلاصتان: الخلاصة العامة + خلاصة أطباق المطابخ العربية
+            // الخلاصتان: الخلاصة العامة (الأولى) + خلاصة أطباق المطابخ العربية (الثانية)
             const RSS_URL_1 = 'https://yallanews.net/rss/latest-posts';
             const RSS_URL_2 = 'https://yallanews.net/rss/category/arabic-cuisine';
             
@@ -341,53 +341,48 @@
                         fetch(API_URL_2).catch(() => null)
                     ]);
 
-                    let allItems = [];
+                    let items1 = [];
+                    let items2 = [];
 
                     if (res1 && res1.ok) {
                         const data1 = await res1.json();
                         if (data1.status === 'ok' && data1.items) {
-                            allItems = allItems.concat(data1.items);
+                            items1 = data1.items;
                         }
                     }
 
                     if (res2 && res2.ok) {
                         const data2 = await res2.json();
                         if (data2.status === 'ok' && data2.items) {
-                            allItems = allItems.concat(data2.items);
+                            items2 = data2.items;
                         }
                     }
 
-                    if (allItems.length === 0) {
+                    if (items1.length === 0 && items2.length === 0) {
                         renderEmpty();
                         return;
                     }
 
-                    const posts = allItems.map(function (item, index) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = item.description || '';
-                        let summary = tempDiv.textContent || tempDiv.innerText || '';
-
-                        summary = summary.replace(/\s+/g, ' ').trim();
-
-                        const MAX_SUMMARY_LENGTH = 200;
-                        if (summary.length > MAX_SUMMARY_LENGTH) {
-                            summary = summary.substring(0, MAX_SUMMARY_LENGTH).trim() + '…';
-                        }
-
-                        if (!summary) {
-                            summary = 'اضغط على زر المتابعة لقراءة المقال كاملاً.';
-                        }
-
-                        return {
-                            title: item.title || `مقال بدون عنوان #${index + 1}`,
-                            link: item.link || SITE_URL,
-                            summary: summary
-                        };
+                    // معالجة وتنسيق عناصر الخلاصة الأولى
+                    const processedItems1 = items1.map(function (item, index) {
+                        return formatPost(item, index);
                     });
 
-                    // اختيار 5 بطاقات عشوائية من مجموع الخلاصتين مع كل زيارة
-                    const randomPosts = getRandomPosts(posts, 5);
-                    renderPosts(randomPosts);
+                    // معالجة وتنسيق عناصر الخلاصة الثانية
+                    const processedItems2 = items2.map(function (item, index) {
+                        return formatPost(item, index);
+                    });
+
+                    // 1. أخذ أول 7 أخبار (أو أقل إن لم تتوفر 7) من الخلاصة الأولى بالترتيب
+                    const firstSeven = processedItems1.slice(0, 7);
+
+                    // 2. أخذ 3 بطاقات عشوائية من الخلاصة الثانية
+                    const randomThreeFromSecond = getRandomPosts(processedItems2, 3);
+
+                    // دمج القائمتين (الـ 7 الأولى الثابتة متبوعة بـ 3 عشوائية من الثانية)
+                    const finalPosts = firstSeven.concat(randomThreeFromSecond);
+
+                    renderPosts(finalPosts);
 
                 } catch (error) {
                     console.error('خطأ في تحميل الخلاصات:', error);
@@ -395,7 +390,31 @@
                 }
             }
 
+            function formatPost(item, index) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.description || '';
+                let summary = tempDiv.textContent || tempDiv.innerText || '';
+
+                summary = summary.replace(/\s+/g, ' ').trim();
+
+                const MAX_SUMMARY_LENGTH = 200;
+                if (summary.length > MAX_SUMMARY_LENGTH) {
+                    summary = summary.substring(0, MAX_SUMMARY_LENGTH).trim() + '…';
+                }
+
+                if (!summary) {
+                    summary = 'اضغط على زر المتابعة لقراءة المقال كاملاً.';
+                }
+
+                return {
+                    title: item.title || `مقال بدون عنوان #${index + 1}`,
+                    link: item.link || SITE_URL,
+                    summary: summary
+                };
+            }
+
             function getRandomPosts(array, count) {
+                if (!array || array.length === 0) return [];
                 const shuffled = [...array].sort(() => 0.5 - Math.random());
                 return shuffled.slice(0, count);
             }
