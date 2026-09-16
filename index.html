@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آخر الأخبار - يلا نيوز</title>
+    <!-- خطوط جوجل -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #dc2626;
+            --accent-hover: #b91c1c;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* === الترويسة === */
+        header {
+            text-align: center;
+            margin-bottom: 36px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        h1 {
+            font-family: 'Cairo', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 .badge {
+            display: inline-block;
+            background: #ffffff;
+            color: #dc2626;
+            font-size: 0.6rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            vertical-align: middle;
+            margin-right: 8px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .site-link-btn {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 1;
+            margin-top: 12px;
+        }
+
+        .site-link-btn:hover {
+            background-color: #ffffff;
+            color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* === حالة التحميل === */
+        .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* === حالة الخطأ === */
+        .error-state {
+            text-align: center;
+            padding: 40px 24px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius);
+            color: #b91c1c;
+            font-size: 1rem;
+        }
+
+        .error-state strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.15rem;
+        }
+
+        /* === البطاقات === */
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .post-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 26px;
+            box-shadow: var(--shadow);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .post-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
+            border-color: #cbd5e1;
+        }
+
+        .post-card:hover::before {
+            opacity: 1;
+        }
+
+        .post-title {
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        .post-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .post-title a:hover {
+            color: var(--accent);
+        }
+
+        .post-summary {
+            font-size: 0.98rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        .post-summary p {
+            margin: 0;
+        }
+
+        .post-footer {
+            margin-top: 4px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .read-more-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            font-family: 'Tajawal', sans-serif;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+        }
+
+        .read-more-btn:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+        }
+
+        .read-more-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* === حالة عدم وجود مقالات === */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* === الفوتر === */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* === شاشات صغيرة === */
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            h1 { font-size: 1.7rem; }
+            .post-card { padding: 18px 20px; }
+            .post-title { font-size: 1.08rem; }
+            .post-summary { font-size: 0.93rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><span class="badge">جديد</span>آخر الأخبار</h1>
+        <a href="https://yallanews.net" target="_blank" rel="noopener noreferrer" class="site-link-btn">
+            زيارة موقع يلا نيوز
+        </a>
+    </header>
+
+    <main id="app">
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>جارٍ تحميل آخر الأخبار...</p>
+        </div>
+    </main>
+
+    <div class="footer">
+        &copy; <span id="year"></span> <a href="https://yallanews.net" target="_blank" rel="noopener noreferrer">يلا نيوز</a> - جميع الحقوق محفوظة.
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const RSS_URL = 'https://yallanews.net/rss/latest-posts';
+            const SITE_URL = 'https://yallanews.net';
+            // استخدام خدمة rss2json المتخصصة
+            const API_URL = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(RSS_URL);
+
+            const app = document.getElementById('app');
+
+            async function loadFeed() {
+                try {
+                    const response = await fetch(API_URL);
+
+                    if (!response.ok) {
+                        throw new Error(`فشل الاتصال بالخدمة (رمز الحالة: ${response.status})`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status !== 'ok') {
+                        throw new Error(data.message || 'فشل جلب البيانات من الخلاصة.');
+                    }
+
+                    if (!data.items || data.items.length === 0) {
+                        renderEmpty();
+                        return;
+                    }
+
+                    const posts = data.items.map(function (item, index) {
+                        // تنظيف الوصف من وسوم HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = item.description || '';
+                        let summary = tempDiv.textContent || tempDiv.innerText || '';
+
+                        summary = summary.replace(/\s+/g, ' ').trim();
+
+                        const MAX_SUMMARY_LENGTH = 200;
+                        if (summary.length > MAX_SUMMARY_LENGTH) {
+                            summary = summary.substring(0, MAX_SUMMARY_LENGTH).trim() + '…';
+                        }
+
+                        if (!summary) {
+                            summary = 'اضغط على زر المتابعة لقراءة المقال كاملاً.';
+                        }
+
+                        return {
+                            title: item.title || `مقال بدون عنوان #${index + 1}`,
+                            link: item.link || SITE_URL,
+                            summary: summary,
+                            index: index
+                        };
+                    });
+
+                    renderPosts(posts);
+
+                } catch (error) {
+                    console.error('خطأ في تحميل الخلاصة:', error);
+                    renderError(error.message);
+                }
+            }
+
+            function renderPosts(posts) {
+                const container = document.createElement('div');
+                container.className = 'posts-container';
+
+                posts.forEach(function (post) {
+                    const card = document.createElement('article');
+                    card.className = 'post-card';
+
+                    const titleEl = document.createElement('h2');
+                    titleEl.className = 'post-title';
+                    const titleLink = document.createElement('a');
+                    titleLink.href = post.link;
+                    titleLink.target = '_blank';
+                    titleLink.rel = 'noopener noreferrer';
+                    titleLink.textContent = post.title;
+                    titleEl.appendChild(titleLink);
+
+                    const summaryEl = document.createElement('div');
+                    summaryEl.className = 'post-summary';
+                    const summaryP = document.createElement('p');
+                    summaryP.textContent = post.summary;
+                    summaryEl.appendChild(summaryP);
+
+                    const footerEl = document.createElement('div');
+                    footerEl.className = 'post-footer';
+                    const readMoreLink = document.createElement('a');
+                    readMoreLink.className = 'read-more-btn';
+                    readMoreLink.href = post.link;
+                    readMoreLink.target = '_blank';
+                    readMoreLink.rel = 'noopener noreferrer';
+                    readMoreLink.innerHTML = '<span>متابعة</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                    footerEl.appendChild(readMoreLink);
+
+                    card.appendChild(titleEl);
+                    card.appendChild(summaryEl);
+                    card.appendChild(footerEl);
+
+                    container.appendChild(card);
+                });
+
+                app.innerHTML = '';
+                app.appendChild(container);
+            }
+
+            function renderError(message) {
+                app.innerHTML = '<div class="error-state"><strong>عذراً، حدث خطأ</strong><p>' + escapeHtml(message) + '</p><p style="margin-top:14px;font-size:0.88rem;">يمكنك المحاولة مرة أخرى لاحقاً، أو زيارة <a href="' + SITE_URL + '" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:800;">الموقع مباشرة</a>.</p></div>';
+            }
+
+            function renderEmpty() {
+                app.innerHTML = '<div class="empty-state"><p>لا توجد مقالات متاحة حالياً.</p></div>';
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.appendChild(document.createTextNode(text));
+                return div.innerHTML;
+            }
+
+            // تحديث السنة تلقائياً
+            document.getElementById('year').textContent = new Date().getFullYear();
+
+            loadFeed();
+        })();
+    </script>
+</body>
+</html>
